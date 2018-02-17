@@ -1,0 +1,40 @@
+This contains a brief summary of what you have to do and a suggestion of where
+to start.
+
+The code supplied already has cursor movement, zooming, and handles the joystick
+button presses to store the start and endpoint.
+
+1) You have to implement the part that communicates with the Python server
+to store the waypoints.
+
+2) You have to actually draw the lines on the displayed map.
+
+Look in the variable "shared" that is available in all .cpp files. It is a
+struct that contains a bunch of variables that are "global" to the project and
+are needed by all .cpp files. Note it is declared in client.cpp and as an
+extern in every other .cpp, so they are all sharing the same "shared" variable.
+
+The global constant "max_waypoints" in consts_and_types.h indicates the
+maximum number of waypoints you can store. If the server communicates more than
+this in a single query, then don't store any path (but remember to process
+all server communication).
+
+Files included
+ - The Makefile for the VM for Fall 2017 / Winter 2018
+
+ - client.cpp
+   The part with setup() and main() that ties everything together.
+
+ - consts_and_types.h
+   Declares constants and types used throughout.
+
+ - instructions.txt
+   This document.
+
+ - lcd_image.h and .cpp
+   Almost the same as last term, but you have to use this one.
+   Allows you to draw patches of a .lcd file to a screen.
+
+ - map_drawing.h and .cpp
+   Functions to draw the map and manipulate the coordinates for the map/cursor
+   view.
