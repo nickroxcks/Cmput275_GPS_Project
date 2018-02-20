@@ -15,6 +15,8 @@
 """
 from graph import Graph
 from binary_heap import BinaryHeap
+from serial import Serial
+from time import sleep
 import math
 
 
@@ -207,7 +209,47 @@ def nearest_vertices(location, lat_long):
             ver = v
     return ver
 
-# initally loads graph
+
+def talk_in():
+    '''
+        receive data from arduino
+
+    '''
+    with Serial("/dev/tty.usbmodemFA131", baudrate=9600, timeout=5) as ser:
+        iteration = 0
+        while True:
+            # infinite loop that echoes all messages from
+            # the arduino to the terminal
+            line = ser.readline()
+            # print("I read byte string:", line)
+
+            if not line:
+                print("timeout, restarting...")
+                continue
+
+            line_string = line.decode("ASCII")
+            # print("This is the actual string:", line_string)
+            # print("Stripping off the newline and carriage return")
+            stripped = line_string.rstrip("\r\n")
+            print("I read line: ", stripped)
+
+            # print(len(line_string), len(stripped))
+
+            # construct the line you want to print to the
+            # Arduino, don't forget the newline
+            out_line = "Iteration " + str(iteration) + "\n"
+            iteration += 1
+
+            encoded = out_line.encode("ASCII")
+            # now encoded is a byte object we can
+            # write to the arduino
+
+            ser.write(encoded)
+
+            # rest a bit between rounds of communication
+            sleep(2)
+
+    return received
 
 
 edmonton, location = load_edmonton_graph("edmonton-roads-2.0.1.txt")
@@ -218,7 +260,8 @@ if __name__ == "__main__":
     import doctest
     doctest.testmod()
     cost = CostDistance(location)
-    received = input().split()
+    # received = input().split()
+    received = talk_in()
     v1 = nearest_vertices(location, (received[1], received[2]))
     v2 = nearest_vertices(location, (received[3], received[4]))
 
