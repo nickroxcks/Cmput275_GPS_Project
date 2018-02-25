@@ -1,12 +1,18 @@
 from serial import Serial
 from time import sleep
 
-temp = ["W 5365488 -11333914",
-        "W 5365238 -11334423"]
+temp = ["W 5365488 -11333914\n",
+        "W 5365238 -11334423\n",
+        "W 5365157 -11334634\n",
+        "W 5365035 -11335026\n",
+        "W 5364789 -11335776\n",
+        "W 5364774 -11335815\n",
+        "W 5364756 -11335849\n",
+        "W 5364727 -11335890\n"]
 
 if __name__ == "__main__":
     # timeout is in seconds, can specify a float like 4.5
-    with Serial("/dev/ttyACM3", baudrate=9600, timeout=5) as ser:
+    with Serial("/dev/ttyACM0", baudrate=9600, timeout=5) as ser:
         iteration = 0
         while True:
             line = ser.readline()
@@ -36,8 +42,7 @@ if __name__ == "__main__":
                 ser.write(encoded)
                 continue
             else:
-                out_line = "Iteration " + str(iteration) + "\n"
-                iteration += 1
+                out_line = "%"
                 encoded = out_line.encode("ASCII")
                 ser.write(encoded)
 
