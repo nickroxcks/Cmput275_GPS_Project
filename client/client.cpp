@@ -37,12 +37,12 @@ void setup() {
 
   // initialize SD card
   if (!SD.begin(clientpins::sd_cs)) {
-      Serial.println("Initialization has failed. Things to check:");
-      Serial.println("* Is a card inserted properly?");
-      Serial.println("* Is your wiring correct?");
-      Serial.println("* Is the chipSelect pin the one for your shield or module?");
+    Serial.println("Initialization has failed. Things to check:");
+    Serial.println("* Is a card inserted properly?");
+    Serial.println("* Is your wiring correct?");
+    Serial.println("* Is the chipSelect pin the one for your shield or module?");
 
-      while (1) {} // nothing to do here, fix the card issue and retry
+    while (1) {} // nothing to do here, fix the card issue and retry
   }
 
   // initialize the shared variables, from map_drawing.h
@@ -136,7 +136,14 @@ int main() {
         start = get_cursor_lonlat();
         curr_mode = WAIT_FOR_STOP;
         status_message("TO?");
-
+        Serial.print("I read the start point (lon,lat) ");
+        Serial.print(start.lon);
+        Serial.print(",");
+        Serial.print(start.lat);
+        Serial.print(" which is in map coords(x,y): ");
+        Serial.print(longitude_to_x(shared.map_number, start.lon));
+        Serial.print(",");
+        Serial.println(latitude_to_y(shared.map_number,start.lat));
         // wait until the joystick button is no longer pushed
         while (digitalRead(clientpins::joy_button_pin) == LOW) {}
       }
@@ -144,22 +151,122 @@ int main() {
         // if we were waiting for the end point, record it
         // and then communicate with the server to get the path
         end = get_cursor_lonlat();
-
         // TODO: communicate with the server to get the waypoints
+        Serial.print("I read the end point (lon,lat) ");
+        Serial.print(end.lon);
+        Serial.print(",");
+        Serial.print(end.lat);
+        Serial.print(" which is in map coords(x,y): ");
+        Serial.print(longitude_to_x(shared.map_number, end.lon));
+        Serial.print(",");
+        Serial.println(latitude_to_y(shared.map_number,end.lat));
+
+        status_message("Recieving Wavepoints...");
+        Serial.print("This is map: ");
+        Serial.println(shared.map_number);
+
+        //SERVER HERE WILL MAKE AN ARRAY
+        //and assign values to shared.num_waypoints
+        //and shared.waypoints[]
+        //Ex of the form:
+        //shared.num_waypoints = 9;
+        //shared.waypoints[0].lat = 5340149;
+        //shared.waypoints[0].lon = -11329527;
+        //etc....
+
+        shared.num_waypoints = 9;
+
+        shared.waypoints[0].lat =  5351402;
+        shared.waypoints[0].lon =  -11351198;
+        shared.waypoints[1].lat = 5351320;
+        shared.waypoints[1].lon =-11351197;
+        shared.waypoints[2].lat = 5351293;
+        shared.waypoints[2].lon =-11351197;
+        shared.waypoints[3].lat = 5351222;
+        shared.waypoints[3].lon=-11351197;
+        shared.waypoints[4].lat =  5351222;
+        shared.waypoints[4].lon=-11351493;
+        shared.waypoints[5].lat = 5351222;
+        shared.waypoints[5].lon=-11351658;
+        shared.waypoints[6].lat = 5351223;
+        shared.waypoints[6].lon=-11351988;
+        shared.waypoints[7].lat = 5351128;
+        shared.waypoints[7].lon=-11351987;
+        shared.waypoints[8].lat = 5351032;
+        shared.waypoints[8].lon =-11351988;
+
+        //draw line from start to first Wave(if they are in the display)
+        int32_t starty = latitude_to_y(shared.map_number,start.lat)-shared.map_coords.y;
+        int32_t startx = longitude_to_x(shared.map_number,start.lon)-shared.map_coords.x;
+        int32_t endy = latitude_to_y(shared.map_number,shared.waypoints[0].lat)-shared.map_coords.y;
+        int32_t endx = longitude_to_x(shared.map_number,shared.waypoints[0].lon)-shared.map_coords.x;
+
+        if(((shared.map_coords.x <= (startx+shared.map_coords.x))&&((startx+shared.map_coords.x) <= (shared.map_coords.x+320)))
+        && ((shared.map_coords.y <= (starty+shared.map_coords.y))&&((starty+shared.map_coords.y)<=(shared.map_coords.y+216)))
+        && ((shared.map_coords.x <= (endx+shared.map_coords.x))&&((endx+shared.map_coords.x) <= (shared.map_coords.x+320)))
+        && ((shared.map_coords.y <= (endy+shared.map_coords.y))&&((endy+shared.map_coords.y)<=(shared.map_coords.y+216)))){
+
+          shared.tft-> drawLine(longitude_to_x(shared.map_number, start.lon)-shared.map_coords.x,
+          latitude_to_y(shared.map_number,start.lat)-shared.map_coords.y,
+          longitude_to_x(shared.map_number,shared.waypoints[0].lon)-shared.map_coords.x,
+          latitude_to_y(shared.map_number, shared.waypoints[0].lat)-shared.map_coords.y,ILI9341_BLUE);
+        }
+
+        //Draw lines in between the wavepoints
+        for(int k = 0; k < (shared.num_waypoints-1);k++){
+          //calling these a seperate variable so don't have to keep wrting these entire lines
+          int32_t startwavey = latitude_to_y(shared.map_number,shared.waypoints[k].lat)-shared.map_coords.y;
+          int32_t startwavex = longitude_to_x(shared.map_number,shared.waypoints[k].lon)-shared.map_coords.x;
+          int32_t endwavey = latitude_to_y(shared.map_number,shared.waypoints[k+1].lat)-shared.map_coords.y;
+          int32_t endwavex = longitude_to_x(shared.map_number,shared.waypoints[k+1].lon)-shared.map_coords.x;
+
+          //if the 2 Wavepoints are is in the same screen as the display(shared.map_coords is the top left of the display)
+          //We add 320 as x spams to the width of the display and add 216 becuase the y spams to (240-24)becuase of the
+          //message prompt
+          if(((shared.map_coords.x <= (startwavex+shared.map_coords.x))&&((startwavex+shared.map_coords.x) <= (shared.map_coords.x+320)))
+          && ((shared.map_coords.y <= (startwavey+shared.map_coords.y))&&((startwavey+shared.map_coords.y)<=(shared.map_coords.y+216)))
+          && ((shared.map_coords.x <= (endwavex+shared.map_coords.x))&&((endwavex+shared.map_coords.x) <= (shared.map_coords.x+320)))
+          && ((shared.map_coords.y <= (endwavey+shared.map_coords.y))&&((endwavey+shared.map_coords.y)<=(shared.map_coords.y+216)))){
+
+            shared.tft-> drawLine(startwavex,startwavey,endwavex,endwavey,ILI9341_BLUE);
+
+          }
+        }
+
+        //Draw last line between last wavepoint and destination, if in the display range
+        starty = latitude_to_y(shared.map_number,shared.waypoints[shared.num_waypoints-1].lat)-shared.map_coords.y;
+        startx = longitude_to_x(shared.map_number,shared.waypoints[shared.num_waypoints-1].lon)-shared.map_coords.x;
+        endy = latitude_to_y(shared.map_number,end.lat)-shared.map_coords.y;
+        endx = longitude_to_x(shared.map_number,end.lon)-shared.map_coords.x;
+
+        if(((shared.map_coords.x <= (startx+shared.map_coords.x))&&((startx+shared.map_coords.x) <= (shared.map_coords.x+320)))
+        && ((shared.map_coords.y <= (starty+shared.map_coords.y))&&((starty+shared.map_coords.y)<=(shared.map_coords.y+216)))
+        && ((shared.map_coords.x <= (endx+shared.map_coords.x))&&((endx+shared.map_coords.x) <= (shared.map_coords.x+320)))
+        && ((shared.map_coords.y <= (endy+shared.map_coords.y))&&((endy+shared.map_coords.y)<=(shared.map_coords.y+216)))){
+
+          shared.tft-> drawLine(startx,starty,endx,endy,ILI9341_BLUE);
+        }
 
         // now we have stored the path length in
         // shared.num_waypoints and the waypoints themselves in
         // the shared.waypoints[] array, switch back to asking for the
         // start point of a new request
-        curr_mode = WAIT_FOR_START;
 
+
+        //LEAVE THIS START
+        curr_mode = WAIT_FOR_START;
         // wait until the joystick button is no longer pushed
         while (digitalRead(clientpins::joy_button_pin) == LOW) {}
       }
     }
 
+
     if (shared.redraw_map) {
       // redraw the status message
+      Serial.print("top left of screen x coord: ");
+      Serial.println(shared.map_coords.x);
+      Serial.print("top left of screen y coor: ");
+      Serial.println(shared.map_coords.y);
       if (curr_mode == WAIT_FOR_START) {
         status_message("FROM?");
       }
@@ -172,7 +279,10 @@ int main() {
       draw_cursor();
 
       // TODO: draw the route if there is one
+
+
     }
+
   }
 
   Serial.flush();
