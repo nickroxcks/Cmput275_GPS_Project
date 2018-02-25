@@ -91,6 +91,111 @@ void process_input() {
   }
 }
 
+void communicate(lon_lat_32 start, lon_lat_32 end){
+  enum State {Sending_In, Waiting_N, Sending_A, Waiting_W, Ending};
+  State curr_state = Sending_In;
+  Serial.println("Starting");
+
+  bool check = false;
+  int N_path;
+  int path = 0;
+  int32_t W_lat_long = 0;
+  int count = 1;
+  char incomingByte;
+  while (true) {
+    while (Serial.available() == 0);
+
+    if (curr_state == Ending){
+      Serial.write("End");
+      Serial.flush();
+      break;
+    }
+
+    if (curr_state == Waiting_W){
+      while(true){
+        incomingByte = Serial.read();
+        if (incomingByte == '\n') {
+          if (check){
+            shared.waypoints[path].lon = -1*W_lat_long;
+            path += 1;
+            if (path == N_path) {
+              curr_state = Ending;
+            }
+            Serial.write('A');
+
+            check = false;
+            count = 1;
+            W_lat_long = 0;
+          }
+          break;
+        }
+        if (incomingByte == -1) continue;
+        if (incomingByte == '%') continue;
+        if (incomingByte == '-') continue;
+        if (incomingByte == 'W') {
+          check = true;
+          continue;
+        }
+        if ((incomingByte == ' ') && (count == 1)) {
+          count = 0;
+          continue;
+        }
+        if ((incomingByte == ' ') && (count == 0)) {
+          count = 2;
+          shared.waypoints[path].lat = W_lat_long;
+          W_lat_long = 0;
+          continue;
+        }
+        W_lat_long *= 10;
+        W_lat_long += (incomingByte - 48);
+
+      }
+    }
+
+
+    if (curr_state == Waiting_N){
+      while (true){
+        incomingByte = Serial.read();
+        if (incomingByte == '\n') {
+          if (check){
+            shared.num_waypoints = N_path;
+            curr_state = Waiting_W;
+            Serial.write('A');
+            check = false;
+          }
+          break;
+        }
+        if (incomingByte == -1) continue;
+        if (incomingByte == '%') continue;
+        if (incomingByte == 'N') {
+          check = true;
+          continue;
+        }
+        if (incomingByte == ' ') continue;
+        N_path = incomingByte - 48;
+      }
+
+    }
+
+    if (curr_state == Sending_In){
+      Serial.print("R ");
+      Serial.print(start.lat);
+      Serial.print(" ");
+      Serial.print(start.lon);
+      Serial.print(" ");
+      Serial.print(end.lat);
+      Serial.print(" ");
+      Serial.println(end.lon);
+
+      //Serial.println("R 5365486 -11333915 5364728 -11335891"); //Put input here
+      Serial.flush();
+      curr_state = Waiting_N;
+    }
+
+  }
+
+}
+
 int main() {
   setup();
 
@@ -174,27 +279,9 @@ int main() {
         //shared.waypoints[0].lon = -11329527;
         //etc....
 
-        shared.num_waypoints = 9;
+        communicate(start, end);
 
-        shared.waypoints[0].lat =  5351402;
-        shared.waypoints[0].lon =  -11351198;
-        shared.waypoints[1].lat = 5351320;
-        shared.waypoints[1].lon =-11351197;
-        shared.waypoints[2].lat = 5351293;
-        shared.waypoints[2].lon =-11351197;
-        shared.waypoints[3].lat = 5351222;
-        shared.waypoints[3].lon=-11351197;
-        shared.waypoints[4].lat =  5351222;
-        shared.waypoints[4].lon=-11351493;
-        shared.waypoints[5].lat = 5351222;
-        shared.waypoints[5].lon=-11351658;
-        shared.waypoints[6].lat = 5351223;
-        shared.waypoints[6].lon=-11351988;
-        shared.waypoints[7].lat = 5351128;
-        shared.waypoints[7].lon=-11351987;
-        shared.waypoints[8].lat = 5351032;
-        shared.waypoints[8].lon =-11351988;
-
+        Serial.println(shared.waypoints[2].lat);
         //draw line from start to first Wave(if they are in the display)
         int32_t starty = latitude_to_y(shared.map_number,start.lat)-shared.map_coords.y;
         int32_t startx = longitude_to_x(shared.map_number,start.lon)-shared.map_coords.x;
