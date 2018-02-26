@@ -215,61 +215,52 @@ def talk_in():
         receive data from arduino
 
     '''
-    with Serial("/dev/tty.usbmodemFA131", baudrate=9600, timeout=5) as ser:
-        iteration = 0
+    with Serial("/dev/ttyACM1", baudrate=9600, timeout=0.1) as ser:
         while True:
-            # infinite loop that echoes all messages from
-            # the arduino to the terminal
             line = ser.readline()
-            # print("I read byte string:", line)
-
             if not line:
                 print("timeout, restarting...")
                 continue
-
             line_string = line.decode("ASCII")
-            # print("This is the actual string:", line_string)
-            # print("Stripping off the newline and carriage return")
             stripped = line_string.rstrip("\r\n")
-            print("I read line: ", stripped)
+            print(stripped)
+            if stripped[0] == 'R':
+                received = stripped.split()
+                v1 = nearest_vertices(location, (received[1], received[2]))
+                v2 = nearest_vertices(location, (received[3], received[4]))
+                path = least_cost_path(edmonton, v1, v2, cost)
+                if not path:
+                    a = "N 0\n"
+                    encoded = a.encode("ASCII")
+                    ser.write(encoded)
+                    break
+                else:
+                    a = "N " + str(len(path)) + "\n"
+                    encoded = a.encode("ASCII")
+                    print(a)
+                    ser.write(encoded)
+                    continue
+            elif stripped[0] == 'A':
+                if path:
+                    waypoint = location[path.pop(0)]
+                    a = "W " + str(waypoint[0]) + " " + str(waypoint[1]) + "\n"
+                else:
+                    a = "E \n"
 
-            # print(len(line_string), len(stripped))
+                encoded = a.encode("ASCII")
+                ser.write(encoded)
+                continue
+            else:
+                out_line = "%"
+                encoded = out_line.encode("ASCII")
+                ser.write(encoded)
 
-            # construct the line you want to print to the
-            # Arduino, don't forget the newline
-            out_line = "Iteration " + str(iteration) + "\n"
-            iteration += 1
-
-            encoded = out_line.encode("ASCII")
-            # now encoded is a byte object we can
-            # write to the arduino
-
-            ser.write(encoded)
-
-            # rest a bit between rounds of communication
             sleep(2)
-
-    return received
-
-
-edmonton, location = load_edmonton_graph("edmonton-roads-2.0.1.txt")
-
+    return 0
 
 # if running this specific script, await user command
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+
+    edmonton, location = load_edmonton_graph("edmonton-roads-2.0.1.txt")
     cost = CostDistance(location)
-    # received = input().split()
-    received = talk_in()
-    v1 = nearest_vertices(location, (received[1], received[2]))
-    v2 = nearest_vertices(location, (received[3], received[4]))
-
-    path = least_cost_path(edmonton, v1, v2, cost)
-
-    print("N", len(path))
-    for i in path:
-
-        print("W", location[i][0], location[i][1])
-    if len(path) > 0:
-        print('E')
+    talk_in()
