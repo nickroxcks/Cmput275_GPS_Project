@@ -237,11 +237,11 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
         end_timeout = millis() - start_timeout;
         if (end_timeout > 10000) {
           // timeout if more than 10 seconds pass
-          break;
+          curr_state = Ending;
         }
         if (N_path > 499) {
           // too many paths
-          break;
+          curr_state = Ending;
         }
       }
 
