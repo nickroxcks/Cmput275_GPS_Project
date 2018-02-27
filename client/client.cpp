@@ -92,10 +92,16 @@ void process_input() {
 }
 
 void communicate(lon_lat_32 start, lon_lat_32 end){
+  // This is the essential part of our code. This communicates betweent the
+  // python server and the cpp client.
+
+  //State functions to cycle through different parts of our communication
   enum State {Sending_In, Waiting_N, Sending_A, Waiting_W, Ending};
+  // when this function is called we start by sending the stat and end lon and
+  // lat values
   State curr_state = Sending_In;
   Serial.println("Starting");
-
+  // Variables needed for this scope
   bool check = false;
   int32_t N_path = 0;
   int path = 0;
@@ -106,6 +112,8 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
     while (Serial.available() == 0);
 
     if (curr_state == Ending){
+      // this is the last part of the communication. We break outta loop and
+      // continue on the drawing part of this code.
       Serial.write("E");
       Serial.flush();
       break;
@@ -113,9 +121,18 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
 
     if (curr_state == Waiting_W){
       while(true){
+        // we use a while statement to go through all the incoming bytes from
+        // the server once the once Serial.read sends '\n' we know that all the
+        // info of the waypoints have come in so we store that value and move on
+        // either to the next waypoint of to the end state
         incomingByte = Serial.read();
         if (incomingByte == '\n') {
+          // marks the end of the incoming data and we then preceed to store
+          // values and checks to see if there should be anymore waypoints
+          // cominig in by comparing the current loop iteration and the
+          // num.waypoints value collected earlier
           if (check){
+            // we store longitude as a negative number.
             shared.waypoints[path].lon = -1*W_lat_long;
             path += 1;
               if (path == N_path) {
@@ -125,7 +142,8 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
                 check = false;
             }
             Serial.write('A');
-            Serial.print(path);
+            // Sends confirmation to server that we have received the waypoints
+            // and ready for the next bit of data
             check = false;
             count = 1;
             W_lat_long = 0;
@@ -133,22 +151,32 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
           break;
         }
         if (incomingByte == -1) continue;
+        // if there is nothing in Serial.read we skip over
         if (incomingByte == '%') continue;
+        // from python server we send '%' when things don't go perfect in the
+        // handshaking process so we have this case to skip over it if it pops up
         if (incomingByte == '-') continue;
+        // We deal with the negative longitude in another way at another point
+        // so we skip over it in the storing cycle
         if (incomingByte == 'W') {
+          // Want to make sure that what is being stored are waypoints
           check = true;
           continue;
         }
         if ((incomingByte == ' ') && (count == 1)) {
+          // we ignore the first space and mark it with count that it has happened
           count = 0;
           continue;
         }
-        if ((incomingByte == ' ') && (count == 0)) {
+        if ((incomingByte == ' ') && (count == 0) && (check)) {
+          // this is the second space and marks that we have all the latitude
+          // values this waypoint has. we store it and clear our temp out
           count = 2;
           shared.waypoints[path].lat = W_lat_long;
           W_lat_long = 0;
           continue;
         }
+        // shifts the numeric values over and adds the next value
         W_lat_long *= 10;
         W_lat_long += (incomingByte - 48);
 
@@ -158,11 +186,22 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
 
     if (curr_state == Waiting_N){
       N_path = 0;
+      // some reason valuse were being stored into this before this point so
+      // we clear it again here
       while (true){
+        // we use a while statement to go through all the incoming bytes from
+        // the server once the once Serial.read sends '\n' we know that all the
+        // info of the waypoints have come in so we store that value and move on
+        // either to the next waypoint of to the end state
         incomingByte = Serial.read();
         if (incomingByte == '\n') {
+          // marks the end of the incoming data and we then preceed to store
+          // values and checks to see if we have value needed and the correct
+          // number of paths
           if (check){
             if (N_path == 0){
+              // if we have the case of no paths we skip to the end of the state
+              // machine with nothing being stored and nothing will be drawn
               curr_state = Ending;
               N_path = 0;
               check = false;
@@ -172,6 +211,8 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
               shared.num_waypoints = N_path;
               curr_state = Waiting_W;
               Serial.write('A');
+              // Sends confirmation to server that we have received the waypoints
+              // and ready for the next bit of data
               Serial.print(N_path);
               check = false;
             }
@@ -179,12 +220,17 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
           break;
         }
         if (incomingByte == -1) continue;
+        // if there is nothing in Serial.read we skip over
         if (incomingByte == '%') continue;
+        // from python server we send '%' when things don't go perfect in the
+        // handshaking process so we have this case to skip over it if it pops up
         if (incomingByte == 'N') {
+          // Want to make sure that what is being stored are waypoints
           check = true;
           continue;
         }
-        if (incomingByte == ' ') continue;
+        if (incomingByte == ' ') continue;  // skip over space
+        // shifts the numeric values over and adds the next value
         N_path *= 10;
         N_path += (incomingByte - 48);
       }
@@ -192,6 +238,7 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
     }
 
     if (curr_state == Sending_In){
+      // we send over start and end waypoints
       Serial.print("R ");
       Serial.print(start.lat);
       Serial.print(" ");
@@ -200,10 +247,9 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
       Serial.print(end.lat);
       Serial.print(" ");
       Serial.println(end.lon);
-
-      //Serial.println("R 5365486 -11333915 5364728 -11335891"); //Put input here
       Serial.flush();
       curr_state = Waiting_N;
+      // move onto the next state
     }
 
   }
