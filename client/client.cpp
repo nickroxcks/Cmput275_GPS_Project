@@ -115,8 +115,11 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
 
     if (curr_state == Ending){
       // this is the last part of the communication. We break outta loop and
-      // continue on the drawing part of this code.
-      Serial.write("E");
+      // continue on to the drawing part of this code.
+      // we could have a check somewhere else to make sure server is sending
+      // 'E' as a confirmation of all the waypoints have been sent.
+      // The server is sending this but since everything is working it seems
+      // redundant to this now
       Serial.flush();
       break;
     }
@@ -184,7 +187,6 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
 
       }
     }
-
 
     if (curr_state == Waiting_N){
       N_path = 0;
