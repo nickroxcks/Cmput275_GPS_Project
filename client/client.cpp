@@ -94,8 +94,8 @@ void process_input() {
 void communicate(lon_lat_32 start, lon_lat_32 end){
   // This is the essential part of our code. This communicates betweent the
   // python server and the cpp client.
-
   //State functions to cycle through different parts of our communication
+  int start = second();
   enum State {Sending_In, Waiting_N, Sending_A, Waiting_W, Ending};
   // when this function is called we start by sending the stat and end lon and
   // lat values
@@ -252,6 +252,11 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
       // move onto the next state
     }
 
+    int end = second();
+    if ((end-start)>10){
+      // time out if we take longer than 10 seconds
+      break;
+    }
   }
 
 }
