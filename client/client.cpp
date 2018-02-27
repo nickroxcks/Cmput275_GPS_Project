@@ -212,6 +212,15 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
             else {
               shared.num_waypoints = N_path;
               curr_state = Waiting_W;
+              end_timeout = millis() - start_timeout;
+              if (end_timeout > 10000) {
+                // timeout if more than 10 seconds pass
+                curr_state = Ending;
+              }
+              if (N_path > 499) {
+                // too many paths
+                curr_state = Ending;
+              }
               Serial.write('A');
               // Sends confirmation to server that we have received the waypoints
               // and ready for the next bit of data
@@ -234,15 +243,7 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
         // shifts the numeric values over and adds the next value
         N_path *= 10;
         N_path += (incomingByte - 48);
-        end_timeout = millis() - start_timeout;
-        if (end_timeout > 10000) {
-          // timeout if more than 10 seconds pass
-          curr_state = Ending;
-        }
-        if (N_path > 499) {
-          // too many paths
-          curr_state = Ending;
-        }
+
       }
 
     }
