@@ -214,6 +214,12 @@ def talk_in():
     '''
         receive data from arduino
 
+        This function is intended to loop forever without a break.
+        this has no state function unlike the client.
+        If something happens with the communication that breaks the
+        handshaking process then it is up to the client to get back to the
+        right state and send start and end points over here so the server can
+        reconstruct a new path
     '''
     with Serial("/dev/ttyACM1", baudrate=9600, timeout=0.1) as ser:
         while True:
@@ -228,6 +234,7 @@ def talk_in():
                 received = stripped.split()
                 v1 = nearest_vertices(location, (received[1], received[2]))
                 v2 = nearest_vertices(location, (received[3], received[4]))
+                path = []
                 path = least_cost_path(edmonton, v1, v2, cost)
                 if not path:
                     a = "N 0\n"

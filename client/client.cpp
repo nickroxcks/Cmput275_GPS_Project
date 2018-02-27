@@ -95,7 +95,6 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
   // This is the essential part of our code. This communicates betweent the
   // python server and the cpp client.
   //State functions to cycle through different parts of our communication
-  int start = second();
   enum State {Sending_In, Waiting_N, Sending_A, Waiting_W, Ending};
   // when this function is called we start by sending the stat and end lon and
   // lat values
@@ -160,6 +159,7 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
         // so we skip over it in the storing cycle
         if (incomingByte == 'W') {
           // Want to make sure that what is being stored are waypoints
+          int start_time = millis();
           check = true;
           continue;
         }
@@ -179,7 +179,11 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
         // shifts the numeric values over and adds the next value
         W_lat_long *= 10;
         W_lat_long += (incomingByte - 48);
-
+        int end_time = millis() - start_time;
+        if (end> 10000){
+          // breaks out of communication scope if timeout of 10 seconds occurs
+          curr_state = Ending;
+        }
       }
     }
 
@@ -210,6 +214,7 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
             else {
               shared.num_waypoints = N_path;
               curr_state = Waiting_W;
+              int start_time = millis();
               Serial.write('A');
               // Sends confirmation to server that we have received the waypoints
               // and ready for the next bit of data
@@ -250,12 +255,6 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
       Serial.flush();
       curr_state = Waiting_N;
       // move onto the next state
-    }
-
-    int end = second();
-    if ((end-start)>10){
-      // time out if we take longer than 10 seconds
-      break;
     }
   }
 
