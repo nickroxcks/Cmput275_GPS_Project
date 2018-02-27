@@ -221,7 +221,7 @@ def talk_in():
         right state and send start and end points over here so the server can
         reconstruct a new path
     '''
-    with Serial("/dev/ttyACM1", baudrate=9600, timeout=0.1) as ser:
+    with Serial("/dev/ttyACM0", baudrate=9600, timeout=0.1) as ser:
         while True:
             line = ser.readline()
             if not line:
@@ -240,11 +240,9 @@ def talk_in():
                     a = "N 0\n"
                     encoded = a.encode("ASCII")
                     ser.write(encoded)
-                    break
                 else:
                     a = "N " + str(len(path)) + "\n"
                     encoded = a.encode("ASCII")
-                    print(a)
                     ser.write(encoded)
                     continue
             elif stripped[0] == 'A':
@@ -265,9 +263,9 @@ def talk_in():
             sleep(2)
     return 0
 
+
 # if running this specific script, await user command
 if __name__ == "__main__":
-
     edmonton, location = load_edmonton_graph("edmonton-roads-2.0.1.txt")
     cost = CostDistance(location)
     talk_in()
