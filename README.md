@@ -31,4 +31,6 @@ Arduino wiring instructions:
     CD              NOT CONNECTED
     
  Wiring of joystick:
+ joy GND <---> arduino GND
+ joy +5v <---> 
     
