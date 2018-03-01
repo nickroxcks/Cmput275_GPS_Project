@@ -70,7 +70,9 @@ How to run code:
   
 - If there is no route between your 2 points you have selected, or there is over 500 waypoints in 
   your route, the server will timeout you will regain control of you cursor to select another 2 points. 
-
+ 
+ -Longer routes may take longer for Arduino and server to communicate the entire path
+ 
 Assumptions and other key notes:
 
  - No real uncertainties or assumptions made. Just remember to assign your ports correctly. 
