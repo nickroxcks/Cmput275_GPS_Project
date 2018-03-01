@@ -270,6 +270,64 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
 
 }
 
+void drawingPath(lon_lat_32 start, lon_lat_32 end){
+//added code
+//draw line from start to first Wave(if they are in the display)
+int32_t starty = latitude_to_y(shared.map_number,start.lat)-shared.map_coords.y;
+int32_t startx = longitude_to_x(shared.map_number,start.lon)-shared.map_coords.x;
+int32_t endy = latitude_to_y(shared.map_number,shared.waypoints[0].lat)-shared.map_coords.y;
+int32_t endx = longitude_to_x(shared.map_number,shared.waypoints[0].lon)-shared.map_coords.x;
+
+if(((shared.map_coords.x <= (startx+shared.map_coords.x))&&((startx+shared.map_coords.x) <= (shared.map_coords.x+320)))
+&& ((shared.map_coords.y <= (starty+shared.map_coords.y))&&((starty+shared.map_coords.y)<=(shared.map_coords.y+216)))
+&& ((shared.map_coords.x <= (endx+shared.map_coords.x))&&((endx+shared.map_coords.x) <= (shared.map_coords.x+320)))
+&& ((shared.map_coords.y <= (endy+shared.map_coords.y))&&((endy+shared.map_coords.y)<=(shared.map_coords.y+216)))){
+
+  shared.tft-> drawLine(longitude_to_x(shared.map_number, start.lon)-shared.map_coords.x,
+  latitude_to_y(shared.map_number,start.lat)-shared.map_coords.y,
+  longitude_to_x(shared.map_number,shared.waypoints[0].lon)-shared.map_coords.x,
+  latitude_to_y(shared.map_number, shared.waypoints[0].lat)-shared.map_coords.y,ILI9341_BLUE);
+}
+
+//Draw lines in between the wavepoints
+for(int k = 0; k < (shared.num_waypoints-1);k++){
+  //calling these a seperate variable so don't have to keep wrting these entire lines
+  int32_t startwavey = latitude_to_y(shared.map_number,shared.waypoints[k].lat)-shared.map_coords.y;
+  int32_t startwavex = longitude_to_x(shared.map_number,shared.waypoints[k].lon)-shared.map_coords.x;
+  int32_t endwavey = latitude_to_y(shared.map_number,shared.waypoints[k+1].lat)-shared.map_coords.y;
+  int32_t endwavex = longitude_to_x(shared.map_number,shared.waypoints[k+1].lon)-shared.map_coords.x;
+
+  //if the 2 Wavepoints are is in the same screen as the display(shared.map_coords is the top left of the display)
+  //We add 320 as x spams to the width of the display and add 216 becuase the y spams to (240-24)becuase of the
+  //message prompt
+  if(((shared.map_coords.x <= (startwavex+shared.map_coords.x))&&((startwavex+shared.map_coords.x) <= (shared.map_coords.x+320)))
+  && ((shared.map_coords.y <= (startwavey+shared.map_coords.y))&&((startwavey+shared.map_coords.y)<=(shared.map_coords.y+216)))
+  && ((shared.map_coords.x <= (endwavex+shared.map_coords.x))&&((endwavex+shared.map_coords.x) <= (shared.map_coords.x+320)))
+  && ((shared.map_coords.y <= (endwavey+shared.map_coords.y))&&((endwavey+shared.map_coords.y)<=(shared.map_coords.y+216)))){
+
+    shared.tft-> drawLine(startwavex,startwavey,endwavex,endwavey,ILI9341_BLUE);
+
+  }
+}
+
+//Draw last line between last wavepoint and destination, if in the display range
+starty = latitude_to_y(shared.map_number,shared.waypoints[shared.num_waypoints-1].lat)-shared.map_coords.y;
+startx = longitude_to_x(shared.map_number,shared.waypoints[shared.num_waypoints-1].lon)-shared.map_coords.x;
+endy = latitude_to_y(shared.map_number,end.lat)-shared.map_coords.y;
+endx = longitude_to_x(shared.map_number,end.lon)-shared.map_coords.x;
+
+if(((shared.map_coords.x <= (startx+shared.map_coords.x))&&((startx+shared.map_coords.x) <= (shared.map_coords.x+320)))
+&& ((shared.map_coords.y <= (starty+shared.map_coords.y))&&((starty+shared.map_coords.y)<=(shared.map_coords.y+216)))
+&& ((shared.map_coords.x <= (endx+shared.map_coords.x))&&((endx+shared.map_coords.x) <= (shared.map_coords.x+320)))
+&& ((shared.map_coords.y <= (endy+shared.map_coords.y))&&((endy+shared.map_coords.y)<=(shared.map_coords.y+216)))){
+
+  shared.tft-> drawLine(startx,starty,endx,endy,ILI9341_BLUE);
+}
+
+
+
+}
+
 int main() {
   setup();
 
@@ -355,57 +413,10 @@ int main() {
 
         communicate(start, end);
 
-        //draw line from start to first Wave(if they are in the display)
-        int32_t starty = latitude_to_y(shared.map_number,start.lat)-shared.map_coords.y;
-        int32_t startx = longitude_to_x(shared.map_number,start.lon)-shared.map_coords.x;
-        int32_t endy = latitude_to_y(shared.map_number,shared.waypoints[0].lat)-shared.map_coords.y;
-        int32_t endx = longitude_to_x(shared.map_number,shared.waypoints[0].lon)-shared.map_coords.x;
-
-        if(((shared.map_coords.x <= (startx+shared.map_coords.x))&&((startx+shared.map_coords.x) <= (shared.map_coords.x+320)))
-        && ((shared.map_coords.y <= (starty+shared.map_coords.y))&&((starty+shared.map_coords.y)<=(shared.map_coords.y+216)))
-        && ((shared.map_coords.x <= (endx+shared.map_coords.x))&&((endx+shared.map_coords.x) <= (shared.map_coords.x+320)))
-        && ((shared.map_coords.y <= (endy+shared.map_coords.y))&&((endy+shared.map_coords.y)<=(shared.map_coords.y+216)))){
-
-          shared.tft-> drawLine(longitude_to_x(shared.map_number, start.lon)-shared.map_coords.x,
-          latitude_to_y(shared.map_number,start.lat)-shared.map_coords.y,
-          longitude_to_x(shared.map_number,shared.waypoints[0].lon)-shared.map_coords.x,
-          latitude_to_y(shared.map_number, shared.waypoints[0].lat)-shared.map_coords.y,ILI9341_BLUE);
-        }
-
-        //Draw lines in between the wavepoints
-        for(int k = 0; k < (shared.num_waypoints-1);k++){
-          //calling these a seperate variable so don't have to keep wrting these entire lines
-          int32_t startwavey = latitude_to_y(shared.map_number,shared.waypoints[k].lat)-shared.map_coords.y;
-          int32_t startwavex = longitude_to_x(shared.map_number,shared.waypoints[k].lon)-shared.map_coords.x;
-          int32_t endwavey = latitude_to_y(shared.map_number,shared.waypoints[k+1].lat)-shared.map_coords.y;
-          int32_t endwavex = longitude_to_x(shared.map_number,shared.waypoints[k+1].lon)-shared.map_coords.x;
-
-          //if the 2 Wavepoints are is in the same screen as the display(shared.map_coords is the top left of the display)
-          //We add 320 as x spams to the width of the display and add 216 becuase the y spams to (240-24)becuase of the
-          //message prompt
-          if(((shared.map_coords.x <= (startwavex+shared.map_coords.x))&&((startwavex+shared.map_coords.x) <= (shared.map_coords.x+320)))
-          && ((shared.map_coords.y <= (startwavey+shared.map_coords.y))&&((startwavey+shared.map_coords.y)<=(shared.map_coords.y+216)))
-          && ((shared.map_coords.x <= (endwavex+shared.map_coords.x))&&((endwavex+shared.map_coords.x) <= (shared.map_coords.x+320)))
-          && ((shared.map_coords.y <= (endwavey+shared.map_coords.y))&&((endwavey+shared.map_coords.y)<=(shared.map_coords.y+216)))){
-
-            shared.tft-> drawLine(startwavex,startwavey,endwavex,endwavey,ILI9341_BLUE);
-
-          }
-        }
-
-        //Draw last line between last wavepoint and destination, if in the display range
-        starty = latitude_to_y(shared.map_number,shared.waypoints[shared.num_waypoints-1].lat)-shared.map_coords.y;
-        startx = longitude_to_x(shared.map_number,shared.waypoints[shared.num_waypoints-1].lon)-shared.map_coords.x;
-        endy = latitude_to_y(shared.map_number,end.lat)-shared.map_coords.y;
-        endx = longitude_to_x(shared.map_number,end.lon)-shared.map_coords.x;
-
-        if(((shared.map_coords.x <= (startx+shared.map_coords.x))&&((startx+shared.map_coords.x) <= (shared.map_coords.x+320)))
-        && ((shared.map_coords.y <= (starty+shared.map_coords.y))&&((starty+shared.map_coords.y)<=(shared.map_coords.y+216)))
-        && ((shared.map_coords.x <= (endx+shared.map_coords.x))&&((endx+shared.map_coords.x) <= (shared.map_coords.x+320)))
-        && ((shared.map_coords.y <= (endy+shared.map_coords.y))&&((endy+shared.map_coords.y)<=(shared.map_coords.y+216)))){
-
-          shared.tft-> drawLine(startx,starty,endx,endy,ILI9341_BLUE);
-        }
+        draw_map(); //gets rid of previously drawn paths
+        draw_cursor();
+        drawingPath(start,end);  //where drawing of map occurs
+        status_message("From?");
 
         // now we have stored the path length in
         // shared.num_waypoints and the waypoints themselves in
@@ -438,7 +449,7 @@ int main() {
       draw_map();
       draw_cursor();
 
-      // TODO: draw the route if there is one
+      drawingPath(start,end);  // will draw map if next part of screen
 
 
     }
