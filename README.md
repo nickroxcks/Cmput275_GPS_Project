@@ -81,3 +81,19 @@ Assumptions and other key notes:
    take the point on a road closest to you. I have added in this case a extra line drawn, directing 
    you to the next closest point we are drawing the path from. This extra line is just there to make 
    the route look like its fully connected. 
+   
+Things changed in client.cpp:
+
+- Added function "communicate" which is where all our communication bewtween arduino and server occurs.
+  Function is defined above main function. This function is called in main where the first "TODO" was 
+  commented, in the else statement after the  joystick has been pressed a second time
+  
+- Added function "drawingPath", which takes our wavepoint array and draws the found path from the 
+  server to the current display. This function is defined above main and is called in main right under 
+  where we called  communicate as described above. Note that right before this function is called I've 
+  called the function draw_map and draw_cursor just in case a path has been drawn previously so that the 
+  old path gets erased. Then changed status prompt back to "From". drawingPath is also called in main 
+  again under the if statement which redraws the map(the other TODO). This is called here again in order 
+  to draw the the path again when the map scrolls over or is zoomed in and out. 
+  
+- 
