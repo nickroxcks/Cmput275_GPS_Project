@@ -50,7 +50,7 @@ How to run code:
 - First go into the client directory and make upload the client code to the arduino.
   Keep in mind when uploading your code, our server expects you to be ported in
   /dev/ttyACM0 . If you are not ported here, either change to the correct port or edit
-  line 218 in server.py to the desired port.
+  line 224 in server.py to the desired port.
 
 - Afterwards with your arduino plugged in, go into the server directory and run the 
   python script server.py. This will boot up the server and you will see a bunch of
