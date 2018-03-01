@@ -120,6 +120,7 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
       // 'E' as a confirmation of all the waypoints have been sent.
       // The server is sending this but since everything is working it seems
       // redundant to this now
+
       Serial.flush();
       break;
     }
@@ -207,6 +208,7 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
               // if we have the case of no paths we skip to the end of the state
               // machine with nothing being stored and nothing will be drawn
               curr_state = Ending;
+              Serial.write('A'); // python server needs something sent for it to proceed
               N_path = 0;
               check = false;
               break;
@@ -216,9 +218,12 @@ void communicate(lon_lat_32 start, lon_lat_32 end){
               curr_state = Waiting_W;
               if (N_path > 499) {
                 // too many paths
+                Serial.write('A'); // python server needs something sent for it to proceed
                 curr_state = Ending;
+                break;
               }
               Serial.write('A');
+
               // Sends confirmation to server that we have received the waypoints
               // and ready for the next bit of data
               check = false;
@@ -373,14 +378,14 @@ int main() {
         start = get_cursor_lonlat();
         curr_mode = WAIT_FOR_STOP;
         status_message("TO?");
-        Serial.print("I read the start point (lon,lat) ");
-        Serial.print(start.lon);
-        Serial.print(",");
-        Serial.print(start.lat);
-        Serial.print(" which is in map coords(x,y): ");
-        Serial.print(longitude_to_x(shared.map_number, start.lon));
-        Serial.print(",");
-        Serial.println(latitude_to_y(shared.map_number,start.lat));
+        //Serial.print("I read the start point (lon,lat) ");
+        //Serial.print(start.lon);
+        //Serial.print(",");
+        //Serial.print(start.lat);
+        //Serial.print(" which is in map coords(x,y): ");
+        //Serial.print(longitude_to_x(shared.map_number, start.lon));
+        //Serial.print(",");
+        //Serial.println(latitude_to_y(shared.map_number,start.lat));
         // wait until the joystick button is no longer pushed
         while (digitalRead(clientpins::joy_button_pin) == LOW) {}
       }
@@ -389,18 +394,18 @@ int main() {
         // and then communicate with the server to get the path
         end = get_cursor_lonlat();
         // TODO: communicate with the server to get the waypoints
-        Serial.print("I read the end point (lon,lat) ");
-        Serial.print(end.lon);
-        Serial.print(",");
-        Serial.print(end.lat);
-        Serial.print(" which is in map coords(x,y): ");
-        Serial.print(longitude_to_x(shared.map_number, end.lon));
-        Serial.print(",");
-        Serial.println(latitude_to_y(shared.map_number,end.lat));
+        //Serial.print("I read the end point (lon,lat) ");
+        //Serial.print(end.lon);
+        //Serial.print(",");
+        //Serial.print(end.lat);
+        //Serial.print(" which is in map coords(x,y): ");
+        //Serial.print(longitude_to_x(shared.map_number, end.lon));
+        //Serial.print(",");
+        //Serial.println(latitude_to_y(shared.map_number,end.lat));
 
         status_message("Recieving Wavepoints...");
-        Serial.print("This is map: ");
-        Serial.println(shared.map_number);
+        //Serial.print("This is map: ");
+        //Serial.println(shared.map_number);
 
         //SERVER HERE WILL MAKE AN ARRAY
         //and assign values to shared.num_waypoints
@@ -434,10 +439,10 @@ int main() {
 
     if (shared.redraw_map) {
       // redraw the status message
-      Serial.print("top left of screen x coord: ");
-      Serial.println(shared.map_coords.x);
-      Serial.print("top left of screen y coor: ");
-      Serial.println(shared.map_coords.y);
+      //Serial.print("top left of screen x coord: ");
+      //Serial.println(shared.map_coords.x);
+      //Serial.print("top left of screen y coor: ");
+      //Serial.println(shared.map_coords.y);
       if (curr_mode == WAIT_FOR_START) {
         status_message("FROM?");
       }
